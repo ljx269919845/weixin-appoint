@@ -1,0 +1,175 @@
+<style lang='less'>
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .userinfo-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+</style>
+
+<template>
+  <view class='container'>
+    <view>
+      <view>
+        <label class='header'>我的预约</label>
+      </view>
+      <view wx:if='{{!myappoint.id}}'>
+        <label>祝你身体健康</label>
+      </view>
+      <block wx:else>
+        <view>
+          <label>{{item.appointTime}} {{item.departmentName}}</label>
+          <label>{{item.appointDate}}</label>
+        </view>
+      </block>
+    </view>
+    <view>
+      <label>挂号预约</label>
+      <view>
+        <repeat for='{{departments}}' key='id' item='item'>
+          <label @tap='handleDepartMentClick( {{item.id}} )'>{{item.departName}}</label>
+        </repeat>
+      </view>
+      <view>
+        <view>
+          <repeat for='{{appointDates}}' key='index' item='item'>
+            <label>{{item}}</label>
+          </repeat>
+        </view>
+        <view>
+          <repeat for='{{appointTime}}' key='timeFrame' item='item'>
+            <view>
+              <label>{{item.timeFrame}}</label>
+              <label>点击预约</label>
+              <label>（{{item.count}}）</label>
+            </view>
+          </repeat>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import {
+    requst,
+    API_URL,
+    AppointItem
+  } from '../data/api.js'
+  const TIME_FRAME = ['8:00-9:00', '9:00-10:00', '10:00-11:00', '11:00-12:00',
+    '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00'
+  ]
+  const WEEKS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: 'test'
+    };
+    data = {
+      myappoint: {},
+      appoints: TIME_FRAME.map(elem => new AppointItem(elem))
+    };
+    computed = {
+      departments() {
+        if (!this.appoints || !this.appoints.length) {
+          return []
+        }
+        const departs = []
+        this.appoints.forEach((elem) => {
+          elem.getDeparts().forEach((depart) => {
+            if (departs.findIndex((felem) => {
+              return felem.id === depart.id
+            }) === -1) {
+              departs.push(depart)
+            }
+          })
+        })
+        return departs
+      },
+      appointDates() {
+        // if (!this.appoints || !this.appoints.length) {
+        //   return [];
+        // }
+        // return this.appoints.map(elem => elem.appointDate);
+        let tomorrow = new Date(new Date().getTime() + 3600 * 24)
+        const day = tomorrow.getDate() > 9 ? tomorrow.getDate() : '0' + tomorrow.getDate()
+        return [`${(tomorrow.getMonth() + 1)}-${day}(${WEEKS[tomorrow.getDay()]})`]
+      },
+      appointTime() {
+        if (!this.appoints ||
+          !this.appoints.length
+        ) {
+          return []
+        }
+        return this.appoints.map(elem => {
+          return {
+            timeFrame: elem.timeFrame,
+            count: elem.realyTotal,
+            appointSets: elem.appointSets
+          }
+        })
+      }
+    };
+    methods = {
+      handleDepartMentClick(departmentId) {
+        this.departmentId = departmentId
+        console.log('departmentid click', departmentId)
+      },
+      handleDateClick(appointDate) {
+        this.appointDate = appointDate
+      }
+    }
+    getMyAppoint(userId) {
+      let self = this
+      requst
+        .get(API_URL.USER_APOINT_LIST, {
+          userId: userId
+        })
+        .success(res => {
+          let appoints = res.data || []
+          self.myappoint = appoints[0] || {}
+          self.$apply()
+        })
+    }
+    loadAppointSet() {
+      let self = this
+      requst.get(API_URL.APPOINT_SET_LIST, {}, {
+        status: 1
+      }).success((res) => {
+        const appointsets = res.data || []
+        for (const appoint of appointsets) {
+          const index = self.appoints.findIndex(elem => elem.timeFrame === appoint.timeFrame)
+          if (index >= 0) {
+            self.appoints[index].addAppointSet(appoint)
+          }
+        }
+        self.$apply()
+      })
+    }
+    onLoad() {
+      let self = this
+      wx.login({
+        success(res) {
+          if (res.code) {
+            requst.post(API_URL.USER_LOGIN, {}, {}, {
+              code: res.code
+            }).success(response => {
+              if (response.data.id && response.data.userName) {
+                // 已经注册过
+                self.getMyAppoint(response.data.id)
+              }
+            })
+          }
+        }
+      })
+      self.loadAppointSet()
+    }
+  }
+</script>
