@@ -3,39 +3,81 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 40rpx;
   }
-  .userinfo-avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 50%;
+  .column{
+    width: 680rpx;
+    padding-bottom: 30rpx;
+    .title{
+      font-size: 16pt;
+      color:#09BB07;
+    }
+    .bd{
+      width: 100%;
+      border: 1rpx solid #ccc;
+      min-height: 150rpx;
+      margin-top: 10rpx;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      .center{
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    .bd-row{
+      flex-direction: row;
+    }
   }
-  .userinfo-nickname {
-    color: #aaa;
+
+  .button-hover{
+    background-color: #09BB07;
+    opacity: 0.7;
+  }
+
+  .depart{
+    display: block;
+    width: 120rpx;
+    margin: auto;
+    .d-bd{
+      width: 540rpx;
+      display: flex;
+      flex-flow: row;
+      justify-content: flex-start;
+      .d-item{
+        width: 200rpx;
+      }
+    }
   }
 </style>
 
 <template>
   <view class='container'>
-    <view>
+    <view class="column">
       <view>
-        <label class='header'>我的预约</label>
+        <label class='title'>我的预约</label>
       </view>
-      <view wx:if='{{!myappoint.id}}'>
-        <label>祝你身体健康</label>
+      <view class="bd" wx:if='{{!myappoint.id}}'>
+        <label class="center">祝你身体健康</label>
       </view>
-      <block wx:else>
+      <block class="bd" wx:else>
         <view>
           <label>{{item.appointTime}} {{item.departmentName}}</label>
           <label>{{item.appointDate}}</label>
         </view>
       </block>
     </view>
-    <view>
-      <label>挂号预约</label>
-      <view>
-        <repeat for='{{departments}}' key='id' item='item'>
-          <label @tap='handleDepartMentClick( {{item.id}} )'>{{item.departName}}</label>
-        </repeat>
+    <view class="column">
+      <label class='title'>挂号预约</label>
+      <view class="bd bd-row depart">
+        <label class="name">科室：</label>
+        <view class="d-bd">
+            <repeat for='{{departments}}' key='id' item='item'>
+              <button class="d-item" type="default" button-hover="button-hover" @tap='handleDepartMentClick( {{item.id}} )'>{{item.departName}}</button>
+          </repeat>
+        </view>
       </view>
       <view>
         <view>
@@ -94,10 +136,6 @@
         return departs
       },
       appointDates() {
-        // if (!this.appoints || !this.appoints.length) {
-        //   return [];
-        // }
-        // return this.appoints.map(elem => elem.appointDate);
         let tomorrow = new Date(new Date().getTime() + 3600 * 24)
         const day = tomorrow.getDate() > 9 ? tomorrow.getDate() : '0' + tomorrow.getDate()
         return [`${(tomorrow.getMonth() + 1)}-${day}(${WEEKS[tomorrow.getDay()]})`]
