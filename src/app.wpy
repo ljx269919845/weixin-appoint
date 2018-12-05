@@ -55,7 +55,7 @@
             }).success(response => {
               if (response.data.id && response.data.userName) {
                 // 已经注册过
-                // self.getMyAppoint(response.data.id)
+                wx.setStorage({key: 'userInfo', value: JSON.stringify(response.data)})
               }
               loginResolve(response.data)
             })

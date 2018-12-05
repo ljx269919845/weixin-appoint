@@ -1,47 +1,46 @@
 <style lang='less'>
-  .zan-panel-title{
+  .zan-panel-title {
     color: #09BB07;
   }
-  .zan-panel{
+  .zan-panel {
     width: 700rpx;
   }
-
-  .my-appoint{
+  .my-appoint {
     min-height: 100rpx;
-    .center{
+    .center {
       display: block;
       text-align: center;
       margin-top: 30rpx;
     }
   }
-
-  .depart{
+  .depart {
     box-sizing: border-box;
     display: flex;
     flex-direction: row;
     align-items: stretch;
     font-size: 14px;
-    .depart-title{
+    .depart-title {
       width: 120rpx;
       margin: auto;
       padding-left: 15px;
     }
-    .depart-bd{
+    .depart-bd {
       width: 570rpx;
       display: flex;
       flex-direction: row;
+      flex-wrap: wrap;
       flex: 1;
       padding-top: 5px;
       padding-bottom: 5px;
       align-content: space-around;
       justify-content: space-around;
-      .depart-item{
+      .depart-item {
         width: 140rpx;
         height: 70rpx;
         margin: 5px 0;
         border-radius: 10rpx;
         border: 1rpx solid #ccc;
-        label{
+        label {
           display: block;
           margin: 15rpx auto;
           text-align: center;
@@ -49,16 +48,82 @@
       }
     }
   }
-
-  .active{
-    background-color: #09BB07;
-    opacity: 0.8;
+  .appoint {
+    font-size: 14px;
+    .appoint-bd {
+      margin-left: 10px;
+      display: flex;
+      flex-direction: row;
+      width: 680rpx;
+      align-content: space-around;
+      justify-content: space-around;
+      flex: 1;
+      flex-wrap: wrap;
+      .appoint-item {
+        width: 24.5%;
+        border: 1rpx solid #ccc;
+        box-sizing: border-box;
+        height: 140rpx;
+        margin-top: 5px;
+        padding: 10rpx 0;
+        position: relative;
+        label {
+          text-align: center;
+          font-size: 12px;
+          display: block;
+        }
+        .click {
+          color: #09BB07;
+          margin-top: 20rpx;
+        }
+        .num {
+          position: absolute;
+          right: 10rpx;
+          bottom: 10rpx;
+          font-size: 10px;
+        }
+      }
+    }
   }
-
+  .doctor {
+    margin-left: 20px;
+    display: flex;
+    flex-direction: row;
+    width: 680rpx;
+    align-content: space-around;
+    justify-content: flex-start;
+    flex: 1;
+    flex-wrap: wrap;
+    font-size: 14px;
+    padding: 15px;
+    .doctor-item {
+      width: 25%;
+      border: 1rpx solid #ccc;
+      box-sizing: border-box;
+      overflow: hidden;
+      text-align: center;
+      padding: 10rpx 0;
+      .name {
+        font-size: 12px;
+      }
+      .profess {
+        font-size: 10px;
+        margin-top: 10rpx;
+      }
+    }
+  }
+  .active {
+    color: #fff;
+    background-color: #4b0;
+  }
+  .disable {
+    opacity: 0.3;
+  }
 </style>
 
 <template>
   <view class='container'>
+    <zanLoadmore1 :loading="begin"></zanLoadmore1>
     <view class="zan-panel-title">
       <label>我的预约</label>
     </view>
@@ -71,39 +136,52 @@
         </view>
       </block>
     </view>
-
     <view class="zan-panel-title">
       <label class='title'>挂号预约</label>
     </view>
     <view class="zan-panel depart">
       <view class="depart-title">科室：</view>
       <view class="depart-bd">
-          <repeat for='{{departments}}' key='id' item='item'>
-            <view class="depart-item {{item.id==departId? 'active': ''}}" @tap="selectedDepart({{item.id}})">
-              <label>{{item.departName}}</label>
-            </view>
-        </repeat>
-      </view>
-    </view>
-  <view class="zan-panel-title">
-      <label class='title'>{{appointDates}}</label>
-    </view>
-    <view class="zan-panel appoint">
-      <view class="appoint-bd">
-        <repeat for='{{appointTime}}' key='id' item='item'>
-          <view class="appoint-item {{item.timeFrame == timeFrame? 'active': ''}}">
-            <label>{{item.timeFrame}}</label>
-            <label>点击预约</label>
-            <view>{{item.count}}</view>
+        <repeat for='{{departments}}' key='id' item='item'>
+          <view class="depart-item {{item.id==departId? 'active': ''}}" @tap="selectedDepart({{item.id}})">
+            <label>{{item.departName}}</label>
           </view>
         </repeat>
       </view>
     </view>
+    <view class="zan-panel-title">
+      <label class='title'>{{appointDates}}</label>
+    </view>
+    <view class="zan-panel appoint">
+      <view class="appoint-bd">
+        <repeat for='{{appointTime}}' key='timeFrame' item='item'>
+          <view class="appoint-item {{item.timeFrame == timeFrame? 'active': ''}} {{!item.count || item.disable? 'disable': ''}}" @tap="seletedTimeFrame({{item}})">
+            <label>{{item.timeFrame}}</label>
+            <label class="click">点击预约</label>
+            <view class="num">{{item.count}}</view>
+          </view>
+        </repeat>
+      </view>
+    </view>
+    <zanDoctos direction="bottom">
+      <view class="zan-panel doctor">
+        <repeat for='{{doctors}}' key='id' item='item'>
+          <view class="doctor-item {{item.id==doctorId? 'active': ''}}" @tap="selectedDoctor({{item.id}})">
+            <view class="name">{{item.doctorName}}</view>
+            <view class="profess">{{item.professional}}</view>
+          </view>
+        </repeat>
+      </view>
+    </zanDoctos>
+    <zanToast></zanToast>
   </view>
 </template>
 
 <script>
   import wepy from 'wepy'
+  import zanPopup from '../components/zan-popup'
+  import zanLoadmore from '../components/zan-loadmore'
+  import zanToast from '../components/zan-toast'
   import {
     requst,
     API_URL,
@@ -113,15 +191,28 @@
     '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00'
   ]
   const WEEKS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  const TOMORROW = new Date(new Date().getTime() + 3600 * 24)
+  let TOMORROW_TEXT = `${TOMORROW.getFullYear()}-` + `${TOMORROW.getMonth() > 8 ? TOMORROW.getMonth() : '0' + (TOMORROW.getMonth() + 1)}-`
+  TOMORROW_TEXT += `${TOMORROW.getDate() > 9 ? TOMORROW.getDate() : '0' + TOMORROW.getDate()}`
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: 'test'
-    };
+    }
+    components = {
+      zanDoctos: zanPopup,
+      zanToast: zanToast,
+      zanLoadmore1: zanLoadmore
+    }
     data = {
       myappoint: {},
       appoints: TIME_FRAME.map(elem => new AppointItem(elem)),
       departId: null,
-      timeFrame: null
+      appointDate: TOMORROW_TEXT,
+      timeFrame: null,
+      doctors: [],
+      doctorId: null,
+      appointSetId: null,
+      begin: false
     };
     computed = {
       departments() {
@@ -141,9 +232,9 @@
         return departs
       },
       appointDates() {
-        let tomorrow = new Date(new Date().getTime() + 3600 * 24)
-        const day = tomorrow.getDate() > 9 ? tomorrow.getDate() : '0' + tomorrow.getDate()
-        return [`${(tomorrow.getMonth() + 1)}-${day}(${WEEKS[tomorrow.getDay()]})`]
+        let tomorrow = TOMORROW
+        // const day = tomorrow.getDate() > 9 ? tomorrow.getDate() : '0' + tomorrow.getDate()
+        return [`${TOMORROW_TEXT}(${WEEKS[tomorrow.getDay()]})`]
       },
       appointTime() {
         if (!this.appoints ||
@@ -173,6 +264,28 @@
       },
       selectedDepart(departId) {
         this.departId = departId
+      },
+      seletedTimeFrame(appoint) {
+        if (!appoint.count || appoint.disable) {
+          return
+        }
+        this.timeFrame = appoint.timeFrame
+        const doctors = appoint.appointSets.map(elem => {
+          elem.doctor.appointSetId = elem.id
+          return elem.doctor
+        })
+        this.doctors = doctors.filter(doctor => doctor.status === 1)
+        if (this.doctors.length > 1) {
+          this.doctorId = null
+          this.$invoke('zanDoctos', 'togglePopup')
+        } else {
+          this.applyAppointSet()
+        }
+      },
+      selectedDoctor(doctor) {
+        this.doctorId = doctor.id
+        this.appointSetId = doctor.appointSetId
+        this.$invoke('zanDoctos', 'togglePopup')
       }
     }
     getMyAppoint(userId) {
@@ -205,12 +318,71 @@
         self.$apply()
       })
     }
+    applyAppointSet() {
+      let self = this
+      const userInfo = self.$parent.globalData
+      if (!userInfo && !this.userId) {
+        self.$invoke('zanToast', 'showZanToast', {
+          title: '程序异常，请退出重试',
+          timeout: 1500
+        })
+        return
+      } else if (!userInfo && this.userId) {
+        wx.setStorage({
+          key: 'appoint',
+          value: JSON.stringify({
+            doctorId: self.doctorId,
+            userId: this.userId,
+            departId: self.departId,
+            appointDate: self.appointDate,
+            appointTime: self.timeFrame,
+            status: 1,
+            settingId: self.appointSetId
+          })
+        })
+        wx.navigateTo({
+          url: 'pages/user',
+          fail: () => {
+            self.$invoke('zanToast', 'showZanToast', {
+              title: '程序异常，请重试',
+              timeout: 1500
+            })
+          }
+        })
+        return
+      }
+      const userId = this.userId || userInfo.id
+      requst.post(API_URL.USER_APOINT_APPLY, {
+        settingId: self.appointSetId
+      }, {}, {
+        doctorId: self.doctorId,
+        userId: userId,
+        departId: self.departId,
+        appointDate: self.appointDate,
+        appointTime: self.timeFrame,
+        status: 1
+      })
+      .success((res) => {
+        self.$invoke('zanToast', 'showZanToast', {
+          title: '预约成功',
+          timeout: 1500
+        })
+      }).error(() => {
+        self.$invoke('zanToast', 'showZanToast', {
+          title: '预约失败',
+          timeout: 1500
+        })
+      })
+    }
+    refresh() {
+    }
     onLoad() {
       let self = this
-      self.$parent.globalData.loginPromise.then(response => {
-        if (response.data.id && response.data.userName) {
+      self.$parent.globalData.loginPromise.then(userInfo => {
+        if (userInfo && userInfo.id && userInfo.userName) {
           // 已经注册过
-          self.getMyAppoint(response.data.id)
+          self.getMyAppoint(userInfo.id)
+          self.userId = userInfo.id
         }
       })
       self.loadAppointSet()
