@@ -1,9 +1,10 @@
-<style lang='less'>
+<style lang='css'>
+  @import '/zanui/panel.wxss';
+  @import '/zanui/btn.wxss';
   .container {
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
     padding: 20rpx;
@@ -13,6 +14,11 @@
 <script>
   import wepy from 'wepy'
   import 'wepy-async-function'
+  import {
+    requst,
+    API_URL
+  } from './data/api.js'
+  let loginResolve = null
   export default class extends wepy.app {
     config = {
       pages: [
@@ -36,8 +42,26 @@
       }
     }
     globalData = {
-      userInfo: null
+      loginPromise: new Promise(resolve => {
+        loginResolve = resolve
+      })
     }
-    onLaunch() {}
+    onLaunch() {
+      wx.login({
+        success(res) {
+          if (res.code) {
+            requst.post(API_URL.USER_LOGIN, {}, {}, {
+              code: res.code
+            }).success(response => {
+              if (response.data.id && response.data.userName) {
+                // 已经注册过
+                // self.getMyAppoint(response.data.id)
+              }
+              loginResolve(response.data)
+            })
+          }
+        }
+      })
+    }
   }
 </script>

@@ -1,99 +1,102 @@
 <style lang='less'>
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40rpx;
+  .zan-panel-title{
+    color: #09BB07;
   }
-  .column{
-    width: 680rpx;
-    padding-bottom: 30rpx;
-    .title{
-      font-size: 16pt;
-      color:#09BB07;
-    }
-    .bd{
-      width: 100%;
-      border: 1rpx solid #ccc;
-      min-height: 150rpx;
-      margin-top: 10rpx;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-
-      .center{
-        display: block;
-        margin: 0 auto;
-      }
-    }
-
-    .bd-row{
-      flex-direction: row;
-    }
+  .zan-panel{
+    width: 700rpx;
   }
 
-  .button-hover{
-    background-color: #09BB07;
-    opacity: 0.7;
+  .my-appoint{
+    min-height: 100rpx;
+    .center{
+      display: block;
+      text-align: center;
+      margin-top: 30rpx;
+    }
   }
 
   .depart{
-    display: block;
-    width: 120rpx;
-    margin: auto;
-    .d-bd{
-      width: 540rpx;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    font-size: 14px;
+    .depart-title{
+      width: 120rpx;
+      margin: auto;
+      padding-left: 15px;
+    }
+    .depart-bd{
+      width: 570rpx;
       display: flex;
-      flex-flow: row;
-      justify-content: flex-start;
-      .d-item{
-        width: 200rpx;
+      flex-direction: row;
+      flex: 1;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      align-content: space-around;
+      justify-content: space-around;
+      .depart-item{
+        width: 140rpx;
+        height: 70rpx;
+        margin: 5px 0;
+        border-radius: 10rpx;
+        border: 1rpx solid #ccc;
+        label{
+          display: block;
+          margin: 15rpx auto;
+          text-align: center;
+        }
       }
     }
   }
+
+  .active{
+    background-color: #09BB07;
+    opacity: 0.8;
+  }
+
 </style>
 
 <template>
   <view class='container'>
-    <view class="column">
-      <view>
-        <label class='title'>我的预约</label>
-      </view>
-      <view class="bd" wx:if='{{!myappoint.id}}'>
-        <label class="center">祝你身体健康</label>
-      </view>
-      <block class="bd" wx:else>
-        <view>
+    <view class="zan-panel-title">
+      <label>我的预约</label>
+    </view>
+    <view class="zan-panel my-appoint">
+      <label class="center" wx:if='{{!myappoint.id}}'>祝你身体健康</label>
+      <block wx:else>
+        <view class="my-appoint-item">
           <label>{{item.appointTime}} {{item.departmentName}}</label>
           <label>{{item.appointDate}}</label>
         </view>
       </block>
     </view>
-    <view class="column">
+
+    <view class="zan-panel-title">
       <label class='title'>挂号预约</label>
-      <view class="bd bd-row depart">
-        <label class="name">科室：</label>
-        <view class="d-bd">
-            <repeat for='{{departments}}' key='id' item='item'>
-              <button class="d-item" type="default" button-hover="button-hover" @tap='handleDepartMentClick( {{item.id}} )'>{{item.departName}}</button>
-          </repeat>
-        </view>
-      </view>
-      <view>
-        <view>
-          <repeat for='{{appointDates}}' key='index' item='item'>
-            <label>{{item}}</label>
-          </repeat>
-        </view>
-        <view>
-          <repeat for='{{appointTime}}' key='timeFrame' item='item'>
-            <view>
-              <label>{{item.timeFrame}}</label>
-              <label>点击预约</label>
-              <label>（{{item.count}}）</label>
+    </view>
+    <view class="zan-panel depart">
+      <view class="depart-title">科室：</view>
+      <view class="depart-bd">
+          <repeat for='{{departments}}' key='id' item='item'>
+            <view class="depart-item {{item.id==departId? 'active': ''}}" @tap="selectedDepart({{item.id}})">
+              <label>{{item.departName}}</label>
             </view>
-          </repeat>
-        </view>
+        </repeat>
+      </view>
+    </view>
+  <view class="zan-panel-title">
+      <label class='title'>{{appointDates}}</label>
+    </view>
+    <view class="zan-panel appoint">
+      <view class="appoint-bd">
+        <repeat for='{{appointTime}}' key='id' item='item'>
+          <view class="appoint-item {{item.timeFrame == timeFrame? 'active': ''}}">
+            <label>{{item.timeFrame}}</label>
+            <label>点击预约</label>
+            <view>{{item.count}}</view>
+          </view>
+        </repeat>
       </view>
     </view>
   </view>
@@ -116,7 +119,9 @@
     };
     data = {
       myappoint: {},
-      appoints: TIME_FRAME.map(elem => new AppointItem(elem))
+      appoints: TIME_FRAME.map(elem => new AppointItem(elem)),
+      departId: null,
+      timeFrame: null
     };
     computed = {
       departments() {
@@ -146,7 +151,10 @@
         ) {
           return []
         }
-        return this.appoints.map(elem => {
+        let appoints = this.appoints.map(appoint => {
+          return appoint.filterDepartId(this.departId)
+        })
+        return appoints.map(elem => {
           return {
             timeFrame: elem.timeFrame,
             count: elem.realyTotal,
@@ -162,6 +170,9 @@
       },
       handleDateClick(appointDate) {
         this.appointDate = appointDate
+      },
+      selectedDepart(departId) {
+        this.departId = departId
       }
     }
     getMyAppoint(userId) {
@@ -188,23 +199,18 @@
             self.appoints[index].addAppointSet(appoint)
           }
         }
+        if (appointsets.length) {
+          self.departId = appointsets[0].depart.id
+        }
         self.$apply()
       })
     }
     onLoad() {
       let self = this
-      wx.login({
-        success(res) {
-          if (res.code) {
-            requst.post(API_URL.USER_LOGIN, {}, {}, {
-              code: res.code
-            }).success(response => {
-              if (response.data.id && response.data.userName) {
-                // 已经注册过
-                self.getMyAppoint(response.data.id)
-              }
-            })
-          }
+      self.$parent.globalData.loginPromise.then(response => {
+        if (response.data.id && response.data.userName) {
+          // 已经注册过
+          self.getMyAppoint(response.data.id)
         }
       })
       self.loadAppointSet()

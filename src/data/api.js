@@ -153,12 +153,23 @@ class AppointItem {
 
    clone() {
     return new AppointItem(this.timeFrame, this.total, this.realyTotal, this.totalSurplus, CommonFuncService.clone(this.appointSets));
-  }
+   }
 
   getDeparts(){
     return this.appointSets.map(elem=>{
       return elem.depart;
     })
+  }
+
+  filterDepartId(departId){
+    const appontItem = new AppointItem(this.timeFrame, 0, 0, 0, []);
+    const appointSets = this.appointSets.filter(appointSet => {
+      return appointSet.depart.id == departId;
+    });
+    appointSets.forEach(appointSet => {
+      appontItem.addAppointSet(appointSet);
+    })
+    return appontItem;
   }
 }
 

@@ -1,6 +1,4 @@
 <style lang="css">
-  @import '/zanui/panel.wxss';
-  @import '/zanui/btn.wxss';
   .zan-panel {
     width: 700rpx;
   }
@@ -67,8 +65,7 @@
       userSexChange: function(e) {
         this.userSex = !this.userSex
       },
-      updateUser: function(e){
-
+      updateUser: function(e) {
       }
     }
   }
