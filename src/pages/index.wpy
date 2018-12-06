@@ -54,7 +54,7 @@
       margin-left: 10px;
       display: flex;
       flex-direction: row;
-      width: 680rpx;
+      width: 678rpx;
       align-content: space-around;
       justify-content: space-around;
       flex: 1;
@@ -279,6 +279,8 @@
           this.doctorId = null
           this.$invoke('zanDoctos', 'togglePopup')
         } else {
+          this.doctorId = this.doctors[0].id
+          this.appointSetId = this.doctors[0].appointSetId
           this.applyAppointSet()
         }
       },
@@ -320,7 +322,10 @@
     }
     applyAppointSet() {
       let self = this
-      const userInfo = self.$parent.globalData
+      let userInfo = null
+      try {
+        userInfo = wx.setStorageSync('userInfo')
+      } catch (e) {}
       if (!userInfo && !this.userId) {
         self.$invoke('zanToast', 'showZanToast', {
           title: '程序异常，请退出重试',
@@ -340,9 +345,10 @@
             settingId: self.appointSetId
           })
         })
-        wx.navigateTo({
-          url: 'pages/user',
-          fail: () => {
+        wx.switchTab({
+          url: 'user',
+          fail: (e) => {
+            console.log(e)
             self.$invoke('zanToast', 'showZanToast', {
               title: '程序异常，请重试',
               timeout: 1500
