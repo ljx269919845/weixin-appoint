@@ -55,7 +55,7 @@
             }).success(response => {
               if (response.data.id && response.data.userName) {
                 // 已经注册过
-                wx.setStorage({key: 'userInfo', value: JSON.stringify(response.data)})
+                wx.setStorage({key: 'userInfo', data: JSON.stringify(response.data)})
               }
               loginResolve(response.data)
             })

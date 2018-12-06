@@ -25,7 +25,7 @@
         </view>
       </view>
       <view class="zan-btns">
-        <button class="zan-btn zan-btn--primary" formType="submit" @tap="updateUser">确认预约</button>
+        <button class="zan-btn zan-btn--primary" formType="submit" @tap="updateUser">{{btnText}}</button>
       </view>
     </view>
   </view>
@@ -55,8 +55,10 @@
       },
       userPhoneOptions: {
         title: '手机号',
-        placeholder: '请输入手机号'
-      }
+        placeholder: '请输入手机号',
+        inputType: 'number'
+      },
+      btnText: '确认修改'
     }
     methods = {
       bindDateChange: function(e) {
@@ -67,6 +69,40 @@
       },
       updateUser: function(e) {
       }
+    }
+    onLoad() {
+      let self = this
+      self.$parent.globalData.loginPromise.then(userInfo => {
+        if (userInfo && userInfo.id && userInfo.userName) {
+          self.userId = userInfo.id
+          self.userInfo = userInfo
+        } else if (!userInfo) {
+          try {
+            self.userInfo = wx.wx.getStorageSync('userInfo')
+          } catch (e) {
+
+          }
+        }
+
+        if (self.userInfo) {
+          self.userName = self.userInfo.userName
+          self.userPhone = self.userInfo.userPhone
+          self.userSex = !!self.userInfo.userSex
+          self.userDay = self.userInfo.userDay || '1990-01-01'
+          self.$apply()
+        }
+      })
+    }
+    onShow() {
+      let self = this
+      try {
+        self.appoint = wx.wx.getStorageSync('appoint')
+        if (self.appoint) {
+          self.btnText = '确认预约'
+        } else {
+          self.btnText = '确认修改'
+        }
+      } catch (e) {}
     }
   }
 </script>

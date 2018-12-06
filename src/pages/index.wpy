@@ -7,10 +7,26 @@
   }
   .my-appoint {
     min-height: 100rpx;
+    width: 100%;
     .center {
       display: block;
       text-align: center;
       margin-top: 30rpx;
+    }
+    .my-appoint-item{
+      width: 600rpx;
+      margin-left: 40rpx;
+      padding: 20rpx 0;
+      font-size: 14px;
+      position: relative;
+      .doctor-name{
+        padding: 20rpx 0;
+      }
+      .cancel{
+        position: absolute;
+        right: 0;
+        top: 40rpx;
+      }
     }
   }
   .depart {
@@ -119,6 +135,11 @@
   .disable {
     opacity: 0.3;
   }
+  .warning{
+    color: red;
+    font-size: 12px;
+    margin-left: 20rpx;
+  }
 </style>
 
 <template>
@@ -131,19 +152,25 @@
       <label class="center" wx:if='{{!myappoint.id}}'>祝你身体健康</label>
       <block wx:else>
         <view class="my-appoint-item">
-          <label>{{item.appointTime}} {{item.departmentName}}</label>
-          <label>{{item.appointDate}}</label>
+          <view @longpress="longpressClick">
+            <view>{{myappoint.appointDate}} {{myappoint.appointTime}}</view>
+            <view class="doctor-name">{{myappoint.doctor.doctorName}}({{myappoint.depart.departName}})</view>
+          </view>
+          <view class="cancel" wx:if="{{cancelAppoint}}">
+            <button class="zan-btn zan-btn--small zan-btn--primary" @tap="applyCancelAppoint">取消预约</button>
+          </view>
         </view>
       </block>
     </view>
     <view class="zan-panel-title">
       <label class='title'>挂号预约</label>
+      <label class="warning">每人每天限预约一个号</label>
     </view>
     <view class="zan-panel depart">
       <view class="depart-title">科室：</view>
       <view class="depart-bd">
         <repeat for='{{departments}}' key='id' item='item'>
-          <view class="depart-item {{item.id==departId? 'active': ''}}" @tap="selectedDepart({{item.id}})">
+          <view class="depart-item {{item.id==departId? 'active': ''}} {{disable? 'disable': ''}}" @tap="selectedDepart({{item.id}})">
             <label>{{item.departName}}</label>
           </view>
         </repeat>
@@ -155,7 +182,7 @@
     <view class="zan-panel appoint">
       <view class="appoint-bd">
         <repeat for='{{appointTime}}' key='timeFrame' item='item'>
-          <view class="appoint-item {{item.timeFrame == timeFrame? 'active': ''}} {{!item.count || item.disable? 'disable': ''}}" @tap="seletedTimeFrame({{item}})">
+          <view class="appoint-item {{item.timeFrame == timeFrame? 'active': ''}} {{!item.count || disable? 'disable': ''}}" @tap="seletedTimeFrame({{item}})">
             <label>{{item.timeFrame}}</label>
             <label class="click">点击预约</label>
             <view class="num">{{item.count}}</view>
@@ -196,7 +223,7 @@
   TOMORROW_TEXT += `${TOMORROW.getDate() > 9 ? TOMORROW.getDate() : '0' + TOMORROW.getDate()}`
   export default class Index extends wepy.page {
     config = {
-      navigationBarTitleText: 'test'
+      navigationBarTitleText: '社康挂号助手'
     }
     components = {
       zanDoctos: zanPopup,
@@ -212,9 +239,14 @@
       doctors: [],
       doctorId: null,
       appointSetId: null,
-      begin: false
+      begin: false,
+      cancelAppoint: false
     };
     computed = {
+      disable() {
+        const disable = this.myappoint.appointDate === this.appointDate
+        return disable
+      },
       departments() {
         if (!this.appoints || !this.appoints.length) {
           return []
@@ -255,7 +287,35 @@
       }
     };
     methods = {
+      longpressClick() {
+        this.cancelAppoint = true
+      },
+      applyCancelAppoint() {
+        if (!this.cancelAppoint) {
+          return
+        }
+        this.cancelAppoint = false
+        let self = this
+        requst.post(API_URL.USER_APOINT_DELETE, {appointId: this.myappoint.id, status: 0}, {}, {}).success(() => {
+          self.$invoke('zanToast', 'showZanToast', {
+            title: '取消成功',
+            timeout: 1500
+          })
+          self.myappoint = {}
+          self.$apply()
+        }).failed(() => {
+          self.$invoke('zanToast', 'showZanToast', {
+            title: '取消失败',
+            timeout: 1500
+          })
+          this.cancelAppoint = true
+          self.$apply()
+        })
+      },
       handleDepartMentClick(departmentId) {
+        if (this.disable) {
+          return
+        }
         this.departmentId = departmentId
         console.log('departmentid click', departmentId)
       },
@@ -263,10 +323,13 @@
         this.appointDate = appointDate
       },
       selectedDepart(departId) {
+        if (this.disable) {
+          return
+        }
         this.departId = departId
       },
       seletedTimeFrame(appoint) {
-        if (!appoint.count || appoint.disable) {
+        if (!appoint.count || this.disable) {
           return
         }
         this.timeFrame = appoint.timeFrame
@@ -321,21 +384,26 @@
       })
     }
     applyAppointSet() {
+      if (this.begin) {
+        return
+      }
       let self = this
       let userInfo = null
+      this.begin = true
       try {
-        userInfo = wx.setStorageSync('userInfo')
+        userInfo = wx.getStorageSync('userInfo')
       } catch (e) {}
       if (!userInfo && !this.userId) {
         self.$invoke('zanToast', 'showZanToast', {
           title: '程序异常，请退出重试',
           timeout: 1500
         })
+        this.begin = false
         return
       } else if (!userInfo && this.userId) {
         wx.setStorage({
           key: 'appoint',
-          value: JSON.stringify({
+          data: JSON.stringify({
             doctorId: self.doctorId,
             userId: this.userId,
             departId: self.departId,
@@ -355,6 +423,7 @@
             })
           }
         })
+        this.begin = false
         return
       }
       const userId = this.userId || userInfo.id
@@ -373,14 +442,21 @@
           title: '预约成功',
           timeout: 1500
         })
-      }).error(() => {
+        self.begin = false
+      }).failed(() => {
         self.$invoke('zanToast', 'showZanToast', {
           title: '预约失败',
           timeout: 1500
         })
+        self.begin = false
       })
     }
     refresh() {
+      this.appointTime = null
+      this.appointSetId = null
+      this.doctorId = null
+      this.loadAppointSet()
+      this.getMyAppoint(this.userId)
     }
     onLoad() {
       let self = this
@@ -389,6 +465,7 @@
           // 已经注册过
           self.getMyAppoint(userInfo.id)
           self.userId = userInfo.id
+          self.userInfo = userInfo
         }
       })
       self.loadAppointSet()

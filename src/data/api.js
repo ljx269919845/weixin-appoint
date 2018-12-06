@@ -100,15 +100,21 @@ class Request{
 class Response{
     success(func){
         this.successFunc = func;
+        return this;
     }
 
     failed(func){
         this.failedFunc = func;
+        return this;
     }
 
     handleSuccess(res){
         if(!this.successFunc){
             return;
+        }
+        if(!res || res.statusCode != 200 || res.data.resultCode !== '00000000'){
+          this.handleFailed(res);
+          return;
         }
         this.successFunc(res.data);
     }
