@@ -94,8 +94,8 @@
         }
         .num {
           position: absolute;
-          right: 10rpx;
-          bottom: 10rpx;
+          right: 2rpx;
+          bottom: 2rpx;
           font-size: 10px;
         }
       }
@@ -219,7 +219,7 @@
   ]
   const WEEKS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
   const TOMORROW = new Date(new Date().getTime() + 3600 * 24)
-  let TOMORROW_TEXT = `${TOMORROW.getFullYear()}-` + `${TOMORROW.getMonth() > 8 ? TOMORROW.getMonth() : '0' + (TOMORROW.getMonth() + 1)}-`
+  let TOMORROW_TEXT = `${TOMORROW.getFullYear()}-` + `${TOMORROW.getMonth() > 8 ? TOMORROW.getMonth() + 1 : '0' + (TOMORROW.getMonth() + 1)}-`
   TOMORROW_TEXT += `${TOMORROW.getDate() > 9 ? TOMORROW.getDate() : '0' + TOMORROW.getDate()}`
   export default class Index extends wepy.page {
     config = {
@@ -280,7 +280,7 @@
         return appoints.map(elem => {
           return {
             timeFrame: elem.timeFrame,
-            count: elem.realyTotal,
+            count: elem.totalSurplus,
             appointSets: elem.appointSets
           }
         })
@@ -302,6 +302,7 @@
             timeout: 1500
           })
           self.myappoint = {}
+          self.refresh()
           self.$apply()
         }).failed(() => {
           self.$invoke('zanToast', 'showZanToast', {
@@ -358,7 +359,7 @@
       requst
         .get(API_URL.USER_APOINT_LIST, {
           userId: userId
-        })
+        }, {status: 1})
         .success(res => {
           let appoints = res.data || []
           self.myappoint = appoints[0] || {}
@@ -371,6 +372,7 @@
         status: 1
       }).success((res) => {
         const appointsets = res.data || []
+        self.appoints = TIME_FRAME.map(elem => new AppointItem(elem))
         for (const appoint of appointsets) {
           const index = self.appoints.findIndex(elem => elem.timeFrame === appoint.timeFrame)
           if (index >= 0) {
@@ -398,6 +400,7 @@
           title: '程序异常，请退出重试',
           timeout: 1500
         })
+        this.timeFrame = null
         this.begin = false
         return
       } else if (!userInfo && this.userId) {
@@ -421,6 +424,7 @@
               title: '程序异常，请重试',
               timeout: 1500
             })
+            self.timeFrame = null
           }
         })
         this.begin = false
@@ -443,12 +447,14 @@
           timeout: 1500
         })
         self.begin = false
+        self.refresh()
       }).failed(() => {
         self.$invoke('zanToast', 'showZanToast', {
           title: '预约失败',
           timeout: 1500
         })
         self.begin = false
+        self.timeFrame = null
       })
     }
     refresh() {
