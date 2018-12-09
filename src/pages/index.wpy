@@ -218,7 +218,7 @@
     '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00'
   ]
   const WEEKS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-  const TOMORROW = new Date(new Date().getTime() + 3600 * 24)
+  const TOMORROW = new Date(new Date().getTime() + 3600 * 24 * 1000)
   let TOMORROW_TEXT = `${TOMORROW.getFullYear()}-` + `${TOMORROW.getMonth() > 8 ? TOMORROW.getMonth() + 1 : '0' + (TOMORROW.getMonth() + 1)}-`
   TOMORROW_TEXT += `${TOMORROW.getDate() > 9 ? TOMORROW.getDate() : '0' + TOMORROW.getDate()}`
   export default class Index extends wepy.page {

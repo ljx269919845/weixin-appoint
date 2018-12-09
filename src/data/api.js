@@ -11,7 +11,7 @@
 class Request{
     constructor(){
         this.failedFunc = ()=>{};
-        this.host = "http://172.16.7.174:8087"
+        this.host = "http://127.0.0.1:8087"
     }
 
     post(url, urlParam, queryParam, bodyParam){

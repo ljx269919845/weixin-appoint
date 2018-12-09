@@ -4,14 +4,16 @@
   }
   .picker {
     display: block;
+    width: 600rpx;
+    height: 40rpx;
   }
 </style>
 
 <template>
   <view class="container">
     <view class="zan-panel">
-      <userName :options="userNameOptions" :value="userName" componentId="userName"></userName>
-      <userPhone :options="userPhoneOptions" :value="userPhone" componentId="userPhone"></userPhone>
+      <userName :options.sync="userNameOptions"  @zanFieldChange.user="userNameChange" componentId="userName"></userName>
+      <userPhone :options.sync="userPhoneOptions" @zanFieldChange.user="userPhoneChange"  componentId="userPhone"></userPhone>
       <view class="zan-cell zan-field">
         <view class="zan-cell__hd zan-field__title">性别</view>
         <syncSwitch :checked.sync="userSex" componentId="userSex" @zanSwitchChange.user="userSexChange"></syncSwitch>
@@ -28,6 +30,8 @@
         <button class="zan-btn zan-btn--primary" formType="submit" @tap="updateUser">{{btnText}}</button>
       </view>
     </view>
+    <zanToptips></zanToptips>
+    <zanToast></zanToast>
   </view>
 </template>
 
@@ -35,6 +39,12 @@
   import wepy from 'wepy'
   import zanField from '../components/zan-field'
   import zanSwitch from '../components/zan-switch'
+  import zanToptips from '../components/zan-toptips'
+  import zanToast from '../components/zan-toast'
+  import {
+    API_URL,
+    requst
+  } from '../data/api.js'
   export default class UserPage extends wepy.page {
     config = {
       navigationBarTitleText: '个人信息'
@@ -42,7 +52,9 @@
     components = {
       userName: zanField,
       userPhone: zanField,
-      syncSwitch: zanSwitch
+      syncSwitch: zanSwitch,
+      zanToptips: zanToptips,
+      zanToast: zanToast
     }
     data = {
       userName: '',
@@ -67,8 +79,58 @@
       userSexChange: function(e) {
         this.userSex = !this.userSex
       },
+      userNameChange: function(userName) {
+        this.userName = userName.detail.value
+      },
+      userPhoneChange: function(userPhone) {
+        this.userPhone = userPhone.detail.value
+      },
       updateUser: function(e) {
+        if (!this.userName) {
+          this.$invoke('zanToptips', 'showZanTopTips', {
+            content: '请输入姓名'
+          })
+          return
+        }
+        if (!this.userPhone) {
+          this.$invoke('zanToptips', 'showZanTopTips', {
+            content: '请输入手机号'
+          })
+          return
+        }
+        let self = this
+        self.postHttpUpdateUser()
       }
+    }
+    postHttpUpdateUser(update) {
+      let self = this
+      requst.post(API_URL.USER_INFO_UPDATE, {
+        id: this.userId
+      }, {}, {
+        userName: this.userName,
+        userPhone: this.userPhone,
+        userSex: this.userSex ? 1 : 0,
+        userDay: this.userDay
+      }).success(() => {
+        self.$invoke('zanToast', 'showZanToast', {
+          title: update ? '修改成功' : '预约成功',
+          timeout: 1500
+        })
+      })
+    }
+    applyAppointSet() {
+      let self = this
+      requst.post(API_URL.USER_APOINT_APPLY, {
+        settingId: self.appoint.appointSetId
+      }, {}, self.appoint)
+      .success((res) => {
+        self.postHttpUpdateUser()
+      }).failed(() => {
+        self.$invoke('zanToast', 'showZanToast', {
+          title: '预约失败',
+          timeout: 1500
+        })
+      })
     }
     onLoad() {
       let self = this
@@ -78,17 +140,20 @@
           self.userInfo = userInfo
         } else if (!userInfo) {
           try {
-            self.userInfo = wx.wx.getStorageSync('userInfo')
-          } catch (e) {
-
-          }
+            let userInfo = wx.wx.getStorageSync('userInfo')
+            if (!userInfo) {
+              userInfo = JSON.parse(userInfo)
+              self.userId = userInfo.id
+            }
+          } catch (e) {}
         }
-
         if (self.userInfo) {
           self.userName = self.userInfo.userName
           self.userPhone = self.userInfo.userPhone
           self.userSex = !!self.userInfo.userSex
           self.userDay = self.userInfo.userDay || '1990-01-01'
+          self.userNameOptions.value = self.userName
+          self.userPhoneOptions.value = self.userPhone
           self.$apply()
         }
       })
