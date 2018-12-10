@@ -38,7 +38,8 @@
         }, {
           pagePath: 'pages/user',
           text: '个人信息'
-        }]
+        }],
+        borderStyle: 'white'
       }
     }
     globalData = {

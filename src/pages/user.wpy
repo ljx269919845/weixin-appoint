@@ -110,21 +110,36 @@
         userName: this.userName,
         userPhone: this.userPhone,
         userSex: this.userSex ? 1 : 0,
-        userDay: this.userDay
+        userDay: this.userDay,
+        id: this.userId
       }).success(() => {
-        self.$invoke('zanToast', 'showZanToast', {
-          title: update ? '修改成功' : '预约成功',
-          timeout: 1500
-        })
+        if (this.appoint) {
+          this.applyAppointSet()
+        } else {
+          self.$invoke('zanToast', 'showZanToast', {
+            title: '修改成功',
+            timeout: 1500
+          })
+        }
       })
     }
     applyAppointSet() {
       let self = this
       requst.post(API_URL.USER_APOINT_APPLY, {
-        settingId: self.appoint.appointSetId
+        settingId: self.appoint.settingId
       }, {}, self.appoint)
       .success((res) => {
-        self.postHttpUpdateUser()
+        self.$parent.globalData.appoint = null
+        self.$parent.globalData.needRresh = true
+        self.$invoke('zanToast', 'showZanToast', {
+          title: '预约成功',
+          timeout: 1500
+        })
+        setTimeout(() => {
+          wx.switchTab({
+            url: 'index'
+          })
+        }, 1500)
       }).failed(() => {
         self.$invoke('zanToast', 'showZanToast', {
           title: '预约失败',
@@ -161,7 +176,7 @@
     onShow() {
       let self = this
       try {
-        self.appoint = wx.wx.getStorageSync('appoint')
+        self.appoint = self.$parent.globalData.appoint
         if (self.appoint) {
           self.btnText = '确认预约'
         } else {

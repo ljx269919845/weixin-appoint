@@ -362,6 +362,9 @@
         }, {status: 1})
         .success(res => {
           let appoints = res.data || []
+          appoints = appoints.filter((elem) => {
+            return (elem.appointDate === self.appointDate && (elem.status === 1 || elem.status === 3))
+          })
           self.myappoint = appoints[0] || {}
           self.$apply()
         })
@@ -404,18 +407,15 @@
         this.begin = false
         return
       } else if (!userInfo && this.userId) {
-        wx.setStorage({
-          key: 'appoint',
-          data: JSON.stringify({
-            doctorId: self.doctorId,
-            userId: this.userId,
-            departId: self.departId,
-            appointDate: self.appointDate,
-            appointTime: self.timeFrame,
-            status: 1,
-            settingId: self.appointSetId
-          })
-        })
+        self.$parent.globalData.appoint = {
+          doctorId: self.doctorId,
+          userId: this.userId,
+          departId: self.departId,
+          appointDate: self.appointDate,
+          appointTime: self.timeFrame,
+          status: 1,
+          settingId: self.appointSetId
+        }
         wx.switchTab({
           url: 'user',
           fail: (e) => {
@@ -458,7 +458,7 @@
       })
     }
     refresh() {
-      this.appointTime = null
+      this.timeFrame = null
       this.appointSetId = null
       this.doctorId = null
       this.loadAppointSet()
@@ -475,6 +475,13 @@
         }
       })
       self.loadAppointSet()
+    }
+    onShow() {
+      let self = this
+      if (self.$parent.globalData.needRresh) {
+        self.refresh()
+        self.$parent.globalData.needRresh = false
+      }
     }
   }
 </script>
