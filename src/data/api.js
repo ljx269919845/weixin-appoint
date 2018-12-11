@@ -1,3 +1,4 @@
+ import hotapp from './hotapp.js'
  const API_URL = {
     USER_APOINT_LIST: '/medical/user/appoint/list/{userId}',
     USER_APOINT_APPLY: '/medical/user/appoint/{settingId}',
@@ -11,7 +12,7 @@
 class Request{
     constructor(){
         this.failedFunc = ()=>{};
-        this.host = "http://192.168.31.155:8087"
+        this.host = "http://www.loskatt.xyz:8087"
     }
 
     post(url, urlParam, queryParam, bodyParam){
@@ -21,12 +22,16 @@ class Request{
             newUrl += ('?' + queryStr);
         }
         let requst = new Response();
-        wx.request({
-            url:  newUrl,
-            method: 'POST',
-            data: bodyParam,
-            success: requst.handleSuccess.bind(requst),
-            fail: this.handleFailed(requst).bind(this)
+        hotapp.request({
+          useProxy: true,
+          url:  newUrl,
+          method: 'POST',
+          header: {
+            'content-type': 'application/json'
+          },
+          data: bodyParam,
+          success: requst.handleSuccess.bind(requst),
+          fail: this.handleFailed(requst).bind(this)
         });
         return requst;
     }
@@ -38,11 +43,12 @@ class Request{
             newUrl += ('?' + queryStr);
         }
         let requst = new Response();
-        wx.request({
-            url: newUrl,
-            method: 'GET',
-            success: requst.handleSuccess.bind(requst),
-            fail: this.handleFailed(requst)
+        hotapp.request({
+          useProxy: true,
+          url: newUrl,
+          method: 'GET',
+          success: requst.handleSuccess.bind(requst),
+          fail: this.handleFailed(requst)
         });
         return requst;
     }
