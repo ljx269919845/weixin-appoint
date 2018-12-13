@@ -51,7 +51,7 @@
       wx.login({
         success(res) {
           if (res.code) {
-            requst.post(API_URL.USER_LOGIN, {}, {}, {
+            requst.post(API_URL.USER_LOGIN, {}, {code: res.code}, {
               code: res.code
             }).success(response => {
               if (response.data.id && response.data.userName) {
