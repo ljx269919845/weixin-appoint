@@ -32,7 +32,11 @@ export default class zanToast extends wepy.component {
   methods = {
     showZanToast({title, timeout}) {
       var zanToast = this.zanToast || {}
-      clearTimeout(zanToast.timer)
+    //  clearTimeout(zanToast.timer)
+      if (zanToast.timer) {
+        clearTimeout(zanToast.timer)
+        zanToast.timer = null
+      }
 
       // 弹层设置~
       this.zanToast = {
@@ -42,7 +46,10 @@ export default class zanToast extends wepy.component {
       this.$apply()
 
       var timer = setTimeout(() => {
-        this.methods.clearZanToast.call(this)
+       // this.methods.clearZanToast.call(this)
+        this.zanToast.show = false
+        this.zanToast.timer = null
+        this.$apply()
       }, timeout || 3000)
 
       this.zanToast.timer = timer

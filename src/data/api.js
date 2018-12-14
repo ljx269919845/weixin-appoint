@@ -31,7 +31,8 @@ class Request{
           },
           data: bodyParam,
           success: requst.handleSuccess.bind(requst),
-          fail: this.handleFailed(requst).bind(this)
+          fail: this.handleFailed(requst).bind(this),
+          complete: ()=>{}
         });
         return requst;
     }
@@ -48,7 +49,8 @@ class Request{
           url: newUrl,
           method: 'GET',
           success: requst.handleSuccess.bind(requst),
-          fail: this.handleFailed(requst)
+          fail: this.handleFailed(requst),
+          complete: ()=>{}
         });
         return requst;
     }

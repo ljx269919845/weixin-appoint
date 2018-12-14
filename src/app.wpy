@@ -13,7 +13,7 @@
 
 <script>
   import wepy from 'wepy'
-  import 'wepy-async-function'
+  // import 'wepy-async-function'
   import {
     requst,
     API_URL
@@ -47,6 +47,11 @@
         loginResolve = resolve
       })
     }
+    constructor () {
+      super()
+      // this.use('promisify')
+      console.log('111111111111')
+    }
     onLaunch() {
       wx.login({
         success(res) {
@@ -54,9 +59,12 @@
             requst.post(API_URL.USER_LOGIN, {}, {code: res.code}, {
               code: res.code
             }).success(response => {
-              if (response.data.id && response.data.userName) {
+              response.data.userId = response.data.id
+              if (response.data && response.data.id && response.data.userName && response.data.userPhone) {
                 // 已经注册过
                 wx.setStorage({key: 'userInfo', data: JSON.stringify(response.data)})
+              } else {
+                wx.removeStorageSync('userInfo')
               }
               loginResolve(response.data)
             })

@@ -78,6 +78,8 @@
       },
       userSexChange: function(e) {
         this.userSex = !this.userSex
+        console.log('usersex:', this.userSex)
+        this.$apply()
       },
       userNameChange: function(userName) {
         this.userName = userName.detail.value
@@ -150,7 +152,7 @@
     onLoad() {
       let self = this
       self.$parent.globalData.loginPromise.then(userInfo => {
-        if (userInfo && userInfo.id && userInfo.userName) {
+        if (userInfo && userInfo.id) {
           self.userId = userInfo.id
           self.userInfo = userInfo
         } else if (!userInfo) {
@@ -161,6 +163,8 @@
               self.userId = userInfo.id
             }
           } catch (e) {}
+        } else {
+          self.userId = userInfo.id
         }
         if (self.userInfo) {
           self.userName = self.userInfo.userName

@@ -214,7 +214,7 @@
     API_URL,
     AppointItem
   } from '../data/api.js'
-  const TIME_FRAME = ['8:00-9:00', '9:00-10:00', '10:00-11:00', '11:00-12:00',
+  const TIME_FRAME = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00',
     '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00'
   ]
   const WEEKS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
@@ -467,11 +467,13 @@
     onLoad() {
       let self = this
       self.$parent.globalData.loginPromise.then(userInfo => {
-        if (userInfo && userInfo.id && userInfo.userName) {
+        if (userInfo && userInfo.id && userInfo.userName && userInfo.userPhone) {
           // 已经注册过
           self.getMyAppoint(userInfo.id)
           self.userId = userInfo.id
           self.userInfo = userInfo
+        } else if (userInfo) {
+          self.userId = userInfo.id
         }
       })
       self.loadAppointSet()
