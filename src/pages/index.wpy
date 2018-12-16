@@ -359,9 +359,10 @@
       requst
         .get(API_URL.USER_APOINT_LIST, {
           userId: userId
-        }, {status: 1})
+        }, {pageIndex: 1, pageSize: 40})
         .success(res => {
           let appoints = res.data || []
+          self.$parent.globalData.myappoints = appoints
           appoints = appoints.filter((elem) => {
             return (elem.appointDate === self.appointDate && (elem.status === 1 || elem.status === 3))
           })

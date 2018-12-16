@@ -1,4 +1,4 @@
-<style lang="css">
+<style lang="less">
   .zan-panel {
     width: 700rpx;
   }
@@ -6,6 +6,51 @@
     display: block;
     width: 600rpx;
     height: 40rpx;
+  }
+  .appoint{
+    width: 730rpx;
+    margin-top: 40rpx;
+    padding-left: 7px;
+    .appoint-title{
+      color: #09BB07;
+      font-size: 16px;
+    }
+  }
+  .appoint-body{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+    font-size: 12px;
+    justify-content: space-between;
+    padding-right: 40rpx;
+    .appoint-item {
+      width: 300rpx;
+      border: 1rpx solid #ccc;
+      overflow: hidden;
+      position: relative;
+      margin-top: 10rpx;
+      padding: 10rpx;
+      .doctor-name{
+        padding: 20rpx 0;
+      }
+      .status {
+        position: absolute;
+        bottom: 10rpx;
+        right: 5rpx;
+      }
+      .success{
+        color: #09BB07;
+      }
+      .warn{
+        color: darkgoldenrod;
+        opacity: 0.8;
+      }
+      .error{
+        color: red;
+        opacity: 0.6;
+      }
+    }
   }
 </style>
 
@@ -28,6 +73,20 @@
       </view>
       <view class="zan-btns">
         <button class="zan-btn zan-btn--primary" formType="submit" @tap="updateUser">{{btnText}}</button>
+      </view>
+    </view>
+    <view class="appoint" wx:if="{{myappoints.length}}">
+      <view class="appoint-title">
+        最近预约
+      </view>
+      <view class="appoint-body">
+        <repeat for='{{myappoints}}' key='id' item='item'>
+          <view class="appoint-item">
+            <view>{{item.appointDate}} {{item.appointTime}}</view>
+            <view class="doctor-name">{{item.doctor.doctorName}}({{item.depart.departName}})</view>
+            <view class="status {{item.cls}}">{{item.statusName}}</view>
+          </view>
+        </repeat>
       </view>
     </view>
     <zanToptips></zanToptips>
@@ -70,7 +129,8 @@
         placeholder: '请输入手机号',
         inputType: 'number'
       },
-      btnText: '确认修改'
+      btnText: '确认修改',
+      myappoints: []
     }
     methods = {
       bindDateChange: function(e) {
@@ -179,6 +239,19 @@
     }
     onShow() {
       let self = this
+      this.myappoints = this.$parent.globalData.myappoints.map(elem => {
+        if (elem.status === 0) {
+          elem.statusName = '已取消'
+          elem.cls = 'warn'
+        } else if (elem.status === 1 || elem.status === 3) {
+          elem.statusName = '成功'
+          elem.cls = 'success'
+        } else {
+          elem.cls = 'error'
+          elem.statusName = '失败'
+        }
+        return elem
+      })
       try {
         self.appoint = self.$parent.globalData.appoint
         if (self.appoint) {
